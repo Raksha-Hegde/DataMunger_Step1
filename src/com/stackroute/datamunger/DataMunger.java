@@ -118,13 +118,7 @@ public class DataMunger {
 	public String getBaseQuery(String queryString) {
 
 		String[] temp = null;
-		if (queryString.toLowerCase().contains("where"))
-			temp = queryString.split("where");
-		else if (queryString.toLowerCase().contains("order by"))
-			temp = queryString.split("order by");
-		else if (queryString.toLowerCase().contains("group by"))
-			temp = queryString.split("group by");
-
+		temp = queryString.split("where|order\\s+by|group\\s+by");
 		String baseQueryString = temp[0];
 
 		return baseQueryString;
@@ -147,9 +141,9 @@ public class DataMunger {
 
 		conditionPart = temp[1];
 		if (conditionPart.toLowerCase().contains("order by"))
-			temp = conditionPart.split("order by");
+			temp = conditionPart.split("order\\s+by");
 		else if (conditionPart.toLowerCase().contains("group by"))
-			temp = conditionPart.split("group by");
+			temp = conditionPart.split("group\\s+by");
 
 		conditionPart = temp[1];
 
@@ -207,6 +201,7 @@ public class DataMunger {
 
 			if (splitCondition[loopCounter].toLowerCase().equals("and")
 					|| splitCondition[loopCounter].toLowerCase().equals("or")) {
+				splitCondition = splitCondition[loopCounter].split("( and )|( or )");
 				operatorCounter++;
 
 			}
@@ -320,8 +315,16 @@ public class DataMunger {
 	 * Consider this while extracting the aggregate functions
 	 */
 	public String[] getAggregateFunctions(String queryString) {
+		
+		String aggregateFunction[] = null;
+		String baseQueryString = getBaseQuery(queryString);
+		String functions[] = { "sum", "min", "max", "count", "avg"};
+		
+		for(String fun : functions)
+			aggregateFunction = baseQueryString.split(fun);
+		
 
-		return null;
+		return aggregateFunction;
 	}
 
 }

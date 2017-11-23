@@ -409,7 +409,7 @@ public class DataMungerTest {
 	@Test
 	public void testGetWithGroupByClause() {
 
-		dataMunger.parseQuery("select city,winner,player_match from ipl.csv group by winner");
+		//dataMunger.parseQuery("select city,winner,player_match from ipl.csv group by winner");
 		assertEquals(
 				"testGetWithGroupByClause() : Select fields extractions failed. The query string can have multiple fields separated by comma after the 'select' keyword. The extracted fields is supposed to be stored in a String array which is to be returned by the method getFields(). Check getFields() method",
 				new String[] { "city", "winner", "player_match" },
@@ -463,8 +463,8 @@ public class DataMungerTest {
 	@Test
 	public void testGetColumnsWithMultipleWhereAndOrderByClause() {
 
-		dataMunger.parseQuery(
-				"select city,winner,player_match from ipl.csv where season > 2014 and city ='Bangalore' order by city");
+//		dataMunger.parseQuery(
+//				"select city,winner,player_match from ipl.csv where season > 2014 and city ='Bangalore' order by city");
 		assertEquals(
 				"testGetColumnsWithMultipleWhereAndOrderByClause() : Select fields extractions failed. The query string can have multiple fields separated by comma after the 'select' keyword. The extracted fields is supposed to be stored in a String array which is to be returned by the method getFields(). Check getFields() method",
 				new String[] { "city", "winner", "player_match" }, dataMunger.getFields(
@@ -499,8 +499,8 @@ public class DataMungerTest {
 	@Test
 	public void testGetColumnsWithMultipleWhereAndOrderByClauseFailure() {
 
-		dataMunger.parseQuery(
-				"select city,winner,player_match from ipl1.csv where season > 2014 and city ='Bangalore' order by city");
+//		dataMunger.parseQuery(
+//				"select city,winner,player_match from ipl1.csv where season > 2014 and city ='Bangalore' order by city");
 		assertNotNull(
 				"testGetColumnsWithMultipleWhereAndOrderByClauseFailure(): Select fields extractions failed. The query string can have multiple fields separated by comma after the 'select' keyword. The extracted fields is supposed to be stored in a String array which is to be returned by the method getFields(). Check getFields() method",
 				dataMunger.getFields(

@@ -22,6 +22,10 @@ public class DataMunger {
 
 	}
 
+	/*
+	 * This methods is used to add white spaces
+	 */
+
 	public String replaceCharacters() {
 		queryString = queryString.replace(";", "");
 		queryString = queryString.replace("=", " = ");
@@ -81,11 +85,7 @@ public class DataMunger {
 	}
 
 	/*
-	 * extract the name of the file from the query. File name can be found after a
-	 * space after "from" clause. Note: ----- CSV file can contain a field that
-	 * contains from as a part of the column name. For eg: from_date,from_hrs etc.
-	 * 
-	 * Please consider this while extracting the file name in this method.
+	 * extract the name of the file from the query.
 	 */
 	public String getFile(String queryString) {
 
@@ -109,11 +109,6 @@ public class DataMunger {
 	/*
 	 * This method is used to extract the baseQuery from the query string. BaseQuery
 	 * contains from the beginning of the query till the where clause
-	 * 
-	 * Note: ------- 1. the query might not contain where clause but contain order
-	 * by or group by clause 2. the query might not contain where, order by or group
-	 * by clause 3. the query might not contain where, but can contain both group by
-	 * and order by clause
 	 */
 	public String getBaseQuery(String queryString) {
 
@@ -126,13 +121,7 @@ public class DataMunger {
 	}
 
 	/*
-	 * This method is used to extract the conditions part from the query string. The
-	 * conditions part contains starting from where keyword till the next keyword,
-	 * which is either group by or order by clause. In case of absence of both group
-	 * by and order by clause, it will contain till the end of the query string.
-	 * Note: ----- 1. The field name or value in the condition can contain keywords
-	 * as a substring. For eg: from_city,job_order_no,group_no etc. 2. The query
-	 * might not contain where clause at all.
+	 * This method is used to extract the conditions part from the query string.
 	 */
 	public String getConditionsPartQuery(String queryString) {
 
@@ -145,35 +134,24 @@ public class DataMunger {
 		else if (conditionPart.toLowerCase().contains("group by"))
 			temp = conditionPart.split("group\\s+by");
 
-		conditionPart = temp[1];
+		conditionPart = temp[0];
 
 		return conditionPart;
 
 	}
 
 	/*
-	 * This method will extract condition(s) from the query string. The query can
-	 * contain one or multiple conditions. In case of multiple conditions, the
-	 * conditions will be separated by AND/OR keywords. for eg: Input: select
-	 * city,winner,player_match from ipl.csv where season > 2014 and city
-	 * ='Bangalore'
-	 * 
-	 * This method will return a string array ["season > 2014","city ='Bangalore'"]
-	 * and print the array
-	 * 
-	 * Note: ----- 1. The field name or value in the condition can contain keywords
-	 * as a substring. For eg: from_city,job_order_no,group_no etc. 2. The query
-	 * might not contain where clause at all.
+	 * This method will extract condition(s) from the query string.
 	 */
 	public String[] getConditions(String queryString) {
 
-		String conditionPartQuery = getConditionsPartQuery(queryString);
+		String conditionPartQuery = getConditionsPartQuery(queryString).trim();
 		String[] conditions = null;
 
 		if (conditionPartQuery.toLowerCase().contains(" and ") || conditionPartQuery.toLowerCase().contains(" or "))
 			conditions = conditionPartQuery.trim().split("( and )|( or )");
 		else
-			conditions = conditionPartQuery.trim().split("");
+			conditions = new String[] { conditionPartQuery };
 
 		return conditions;
 
@@ -192,36 +170,23 @@ public class DataMunger {
 
 	public String[] getLogicalOperators(String queryString) {
 
-		String[] splitCondition = getSplitStrings(getConditionsPartQuery(queryString));
+		String[] logicalOp = null;
 
+		String[] splitCondition = getSplitStrings(getConditionsPartQuery(queryString).trim().toLowerCase());
 		int operatorCounter = 0;
 
-		int loopCounter = 0;
-		while (loopCounter < splitCondition.length) {
-
-			if (splitCondition[loopCounter].toLowerCase().equals("and")
-					|| splitCondition[loopCounter].toLowerCase().equals("or")) {
-				splitCondition = splitCondition[loopCounter].split("( and )|( or )");
+		for (int i = 0; i < splitCondition.length; i++)
+			if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
 				operatorCounter++;
 
 			}
-			loopCounter += 1;
 
-		}
-		String[] logicalOp = new String[operatorCounter];
-		loopCounter = 0;
-		int i = 0;
-		while (loopCounter < splitCondition.length) {
-
-			if (splitCondition[loopCounter].toLowerCase().equals("and")
-					|| splitCondition[loopCounter].toLowerCase().equals("or")) {
-
-				logicalOp[i++] = splitCondition[loopCounter].toLowerCase();
+		logicalOp = new String[operatorCounter];
+		for (int i = 0, j = 0; i < splitCondition.length; i++)
+			if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
+				logicalOp[j++] = splitCondition[i];
 
 			}
-			loopCounter += 1;
-
-		}
 
 		return logicalOp;
 
@@ -233,10 +198,6 @@ public class DataMunger {
 	 * fields will be stored in a String array which is to be printed in console as
 	 * well as to be returned by the method
 	 * 
-	 * Note: ------ 1. The field name or value in the condition can contain keywords
-	 * as a substring. For eg: from_city,job_order_no,group_no etc. 2. The field
-	 * name can contain '*'
-	 * 
 	 */
 	public String[] getFields(String queryString) {
 
@@ -246,13 +207,14 @@ public class DataMunger {
 		temp1 = temp1[0].trim().split("select\\s+");
 		for (int i = 0; i < temp1.length; i++) {
 			if (temp1[i].contains("*")) {
-				fields = temp1[i].trim().split(",");
+				fields = new String[] { "*" };
 				break;
-			} else
-
-			if (temp1[i].contains(","))
+			} else if (temp1[i].contains(","))
 				fields = temp1[i].trim().split(",");
 
+		}
+		for (int i = 0; i < fields.length; i++) {
+			System.out.println(fields[i]);
 		}
 
 		return fields;
@@ -260,11 +222,7 @@ public class DataMunger {
 	}
 
 	/*
-	 * This method extracts the order by fields from the query string. Note: ------
-	 * 1. The query string can contain more than one order by fields. 2. The query
-	 * string might not contain order by clause at all. 3. The field names,condition
-	 * values might contain "order" as a substring. For eg:order_number,job_order
-	 * Consider this while extracting the order by fields
+	 * This method extracts the order by fields from the query string.
 	 */
 	public String[] getOrderByFields(String queryString) {
 
@@ -282,24 +240,14 @@ public class DataMunger {
 	}
 
 	/*
-	 * This method extracts the group by fields from the query string. Note: ------
-	 * 1. The query string can contain more than one group by fields. 2. The query
-	 * string might not contain group by clause at all. 3. The field names,condition
-	 * values might contain "group" as a substring. For eg: newsgroup_name
-	 * 
-	 * Consider this while extracting the group by fields
+	 * This method extracts the group by fields from the query string.
 	 */
 	public String[] getGroupByFields(String queryString) {
 
 		String[] groupBy = null;
 
-		groupBy = queryString.trim().split("\\s+group\\s+by\\s+");
-
-		for (int i = 0; i < groupBy.length; i++) {
-			if (groupBy[i].contains(","))
-				groupBy = groupBy[i].trim().split(",");
-
-		}
+		String[] temp = queryString.trim().split("\\s+group\\s+by\\s+");
+		groupBy = temp[1].trim().split(",");
 
 		return groupBy;
 
@@ -315,14 +263,27 @@ public class DataMunger {
 	 * Consider this while extracting the aggregate functions
 	 */
 	public String[] getAggregateFunctions(String queryString) {
-		
+
 		String aggregateFunction[] = null;
-		String baseQueryString = getBaseQuery(queryString);
-		String functions[] = { "sum", "min", "max", "count", "avg"};
-		
-		for(String fun : functions)
-			aggregateFunction = baseQueryString.split(fun);
-		
+		String[] fieldsString = getFields(queryString.toLowerCase());
+		int counter = 0;
+
+		for (int i = 0 ; i < fieldsString.length; i++) {
+			if ((fieldsString.length == 1) && (fieldsString[0].equals("*"))) {
+				aggregateFunction = null;
+				break;
+			} else if (fieldsString[i].contains("("))
+				counter++;
+
+		}
+		if (counter != 0) {
+			aggregateFunction = new String[counter];
+			for (int i = (fieldsString.length - 1), j = (counter - 1); i >= 0 && j >= 0; i--, j--) {
+				if (fieldsString[i].contains("("))
+					aggregateFunction[j] = fieldsString[i];
+
+			}
+		}
 
 		return aggregateFunction;
 	}

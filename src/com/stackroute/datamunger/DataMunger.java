@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class DataMunger {
 
-	static String queryString;
+	
 
 	public static void main(String[] args) {
 
@@ -13,7 +13,7 @@ public class DataMunger {
 		// read the query from the user into queryString variable
 		System.out.println("Enter your query:");
 		Scanner sc = new Scanner(System.in);
-		queryString = sc.nextLine();
+		String queryString = sc.nextLine();
 
 		sc.close();
 
@@ -26,7 +26,7 @@ public class DataMunger {
 	 * This methods is used to add white spaces
 	 */
 
-	public String replaceCharacters() {
+	public String replaceCharacters(String queryString) {
 		queryString = queryString.replace(";", "");
 		queryString = queryString.replace("=", " = ");
 		queryString = queryString.replace(">", " > ");
@@ -51,19 +51,17 @@ public class DataMunger {
 
 		if (!queryString.isEmpty()) {
 
-			queryString = replaceCharacters();
-
 			// call the methods
-			getSplitStrings(queryString); // ----> More work to do
-			getFile(queryString); // ----> More work to do
-			getBaseQuery(queryString);
-			getConditionsPartQuery(queryString);
-			getConditions(queryString);
-			getLogicalOperators(queryString);
-			getFields(queryString);
-			getOrderByFields(queryString);
-			getGroupByFields(queryString);
-			getAggregateFunctions(queryString);
+			getSplitStrings(replaceCharacters(queryString));
+			getFile(replaceCharacters(queryString));
+			getBaseQuery(replaceCharacters(queryString));
+			getConditionsPartQuery(replaceCharacters(queryString));
+			getConditions(replaceCharacters(queryString));
+			getLogicalOperators(replaceCharacters(queryString));
+			getFields(replaceCharacters(queryString));
+			getOrderByFields(replaceCharacters(queryString));
+			getGroupByFields(replaceCharacters(queryString));
+			getAggregateFunctions(replaceCharacters(queryString));
 		} else
 			System.out.println("Query empty");
 
@@ -126,15 +124,17 @@ public class DataMunger {
 	public String getConditionsPartQuery(String queryString) {
 
 		String conditionPart = null;
-		String[] temp = queryString.toLowerCase().split("where");
+		String[] temp = null;
+		if (queryString.contains("where")) {
+			temp = queryString.toLowerCase().split("where");
+			conditionPart = temp[1];
 
-		conditionPart = temp[1];
-		if (conditionPart.toLowerCase().contains("order by"))
-			temp = conditionPart.split("order\\s+by");
-		else if (conditionPart.toLowerCase().contains("group by"))
-			temp = conditionPart.split("group\\s+by");
+			if ((conditionPart.contains("order by")) | (conditionPart.contains("group by"))) {
 
-		conditionPart = temp[0];
+				temp = temp[1].split("(order)|(group)\\s+by");
+				conditionPart = temp[0];
+			}
+		}
 
 		return conditionPart;
 
@@ -145,13 +145,15 @@ public class DataMunger {
 	 */
 	public String[] getConditions(String queryString) {
 
-		String conditionPartQuery = getConditionsPartQuery(queryString).trim();
 		String[] conditions = null;
+		if (getConditionsPartQuery(queryString) != null) {
+			String conditionPartQuery = getConditionsPartQuery(queryString).trim();
 
-		if (conditionPartQuery.toLowerCase().contains(" and ") || conditionPartQuery.toLowerCase().contains(" or "))
-			conditions = conditionPartQuery.trim().split("( and )|( or )");
-		else
-			conditions = new String[] { conditionPartQuery };
+			if (conditionPartQuery.toLowerCase().contains(" and ") || conditionPartQuery.toLowerCase().contains(" or "))
+				conditions = conditionPartQuery.trim().split("( and )|( or )");
+			else
+				conditions = new String[] { conditionPartQuery };
+		}
 
 		return conditions;
 
@@ -171,22 +173,23 @@ public class DataMunger {
 	public String[] getLogicalOperators(String queryString) {
 
 		String[] logicalOp = null;
+		if (getConditionsPartQuery(queryString) != null) {
+			String[] splitCondition = getSplitStrings(getConditionsPartQuery(queryString).trim().toLowerCase());
+			int operatorCounter = 0;
 
-		String[] splitCondition = getSplitStrings(getConditionsPartQuery(queryString).trim().toLowerCase());
-		int operatorCounter = 0;
+			for (int i = 0; i < splitCondition.length; i++)
+				if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
+					operatorCounter++;
 
-		for (int i = 0; i < splitCondition.length; i++)
-			if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
-				operatorCounter++;
+				}
 
-			}
+			logicalOp = new String[operatorCounter];
+			for (int i = 0, j = 0; i < splitCondition.length; i++)
+				if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
+					logicalOp[j++] = splitCondition[i];
 
-		logicalOp = new String[operatorCounter];
-		for (int i = 0, j = 0; i < splitCondition.length; i++)
-			if (splitCondition[i].equals("and") | splitCondition[i].equals("or")) {
-				logicalOp[j++] = splitCondition[i];
-
-			}
+				}
+		}
 
 		return logicalOp;
 
@@ -227,15 +230,12 @@ public class DataMunger {
 	public String[] getOrderByFields(String queryString) {
 
 		String[] orderBy = null;
+		if (queryString.contains(" order by ")) {
 
-		orderBy = queryString.trim().split("\\s+order\\s+by\\s+");
+			String[] temp = queryString.trim().split("\\s+order\\s+by\\s+");
 
-		for (int i = 0; i < orderBy.length; i++) {
-			if (orderBy[i].contains(","))
-				orderBy = orderBy[i].trim().split(",");
-
+			orderBy = temp[1].trim().split(",");
 		}
-
 		return orderBy;
 	}
 
@@ -245,10 +245,11 @@ public class DataMunger {
 	public String[] getGroupByFields(String queryString) {
 
 		String[] groupBy = null;
+		if (queryString.contains(" group by ")) {
+			String[] temp = queryString.trim().split("\\s+group\\s+by\\s+");
 
-		String[] temp = queryString.trim().split("\\s+group\\s+by\\s+");
-		groupBy = temp[1].trim().split(",");
-
+			groupBy = temp[1].trim().split(",");
+		}
 		return groupBy;
 
 	}
@@ -268,7 +269,7 @@ public class DataMunger {
 		String[] fieldsString = getFields(queryString.toLowerCase());
 		int counter = 0;
 
-		for (int i = 0 ; i < fieldsString.length; i++) {
+		for (int i = 0; i < fieldsString.length; i++) {
 			if ((fieldsString.length == 1) && (fieldsString[0].equals("*"))) {
 				aggregateFunction = null;
 				break;
